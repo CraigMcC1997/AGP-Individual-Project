@@ -120,7 +120,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="maincpp.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="rt3d.cpp" />
     <ClCompile Include="rt3dObjLoader.cpp" />
   </ItemGroup>
