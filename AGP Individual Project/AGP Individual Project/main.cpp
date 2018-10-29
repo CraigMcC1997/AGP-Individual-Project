@@ -17,7 +17,8 @@ using namespace std;
 
 // Globals
 // Real programs don't use globals :-D
-GLuint meshIndexCount[4];
+GLuint meshIndexCount;
+GLuint bunnyIndexCount;
 GLuint meshObjects[3];
 
 GLuint phongShaderProgram;
@@ -109,7 +110,7 @@ SDL_Window * setupRC(SDL_GLContext &context) {
 
 // A simple texture loading function
 // lots of room for improvement - and better error checking!
-GLuint loadBitmap(char *fname) {
+GLuint loadBitmap(const char *fname) {
 	GLuint texID;
 	glGenTextures(1, &texID); // generate texture ID
 
@@ -210,25 +211,26 @@ void init(void) {
 	};
 	loadCubeMap(cubeTexFiles, &skybox[0]);
 
-
-	rt3d::loadObj("cube.obj", verts, norms, tex_coords, indices);
+	//skybox cube object
+	rt3d::loadObj("../Resources/cube.obj", verts, norms, tex_coords, indices);
 	GLuint size = indices.size();
-	meshIndexCount[0] = size;
-	textures[0] = loadBitmap("town-skybox/studdedmetal.bmp");
-	//textures[1] = loadBitmap("../Resources/hobgoblin2.bmp");
-	//textures[2] = loadBitmap("../Resources/studdedmetal.bmp");
-	//textures[3] = loadBitmap("../Resources/textBrick.bmp");
-	//textures[4] = loadBitmap("../Resources/textMoss.bmp");
-	//textures[5] = loadBitmap("../Resources/textMarble.bmp");
+	meshIndexCount = size;
 	meshObjects[0] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
+
+	textures[0] = loadBitmap("../Resources/fabric.bmp");
+	textures[1] = loadBitmap("../Resources/hobgoblin2.bmp");
+	textures[2] = loadBitmap("../Resources/studdedmetal.bmp");
+	textures[3] = loadBitmap("../Resources/textBrick.bmp");
+	textures[4] = loadBitmap("../Resources/textMoss.bmp");
+	textures[5] = loadBitmap("../Resources/textMarble.bmp");
+	
 
 
 	//loading the stanford bunny
 	verts.clear(); norms.clear(); tex_coords.clear(); indices.clear();
-	rt3d::loadObj("bunny-5000.obj", verts, norms, tex_coords, indices);
-	GLuint bunnySize = indices.size();
-	meshIndexCount[1] = bunnySize;
-	meshObjects[2] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), nullptr, bunnySize, indices.data());
+	rt3d::loadObj("../Resources/bunny-5000.obj", verts, norms, tex_coords, indices);
+	bunnyIndexCount = indices.size();
+	meshObjects[2] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), nullptr, bunnyIndexCount, indices.data());
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -295,7 +297,7 @@ void draw(SDL_Window * window) {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skybox[0]);
 	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(1.5f, 1.5f, 1.5f));
 	rt3d::setUniformMatrix4fv(skyboxProgram, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount[0], GL_TRIANGLES);
+	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
 	mvStack.pop();
 	glCullFace(GL_BACK); // drawing inside of cube!
 
@@ -320,7 +322,7 @@ void draw(SDL_Window * window) {
 	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(20.0f, 0.1f, 20.0f));
 	rt3d::setUniformMatrix4fv(phongShaderProgram, "modelview", glm::value_ptr(mvStack.top()));
 	rt3d::setMaterial(phongShaderProgram, material0);
-	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount[1], GL_TRIANGLES);
+	rt3d::drawIndexedMesh(meshObjects[0], bunnyIndexCount, GL_TRIANGLES);
 	mvStack.pop();
 
 	// draw the toon shaded bunny
@@ -332,7 +334,7 @@ void draw(SDL_Window * window) {
 	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(scale*10.0f, scale*10.0f, scale*10.0f));
 	rt3d::setUniformMatrix4fv(phongShaderProgram, "modelview", glm::value_ptr(mvStack.top()));
 	rt3d::setMaterial(phongShaderProgram, material0);
-	rt3d::drawIndexedMesh(meshObjects[2], phongShaderProgram, GL_TRIANGLES);
+	rt3d::drawIndexedMesh(meshObjects[2], bunnyIndexCount, GL_TRIANGLES);
 	mvStack.pop();
 
 	// remember to use at least one pop operation per push...

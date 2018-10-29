@@ -35,19 +35,25 @@
     <ClInclude Include="rt3dObjLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="anorms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="phong-tex.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="phong-tex.frag">
-      <Filter>Shaders</Filter>
+    <None Include="cubeMap.frag">
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="cubeMap.vert">
-      <Filter>Shaders</Filter>
+      <Filter>Resource Files</Filter>
     </None>
-    <None Include="cubeMap.frag">
-      <Filter>Shaders</Filter>
+    <None Include="phong-tex.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="phong-tex.vert">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>

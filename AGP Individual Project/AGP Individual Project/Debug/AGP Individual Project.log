@@ -1,13 +1,12 @@
 ﻿  main.cpp
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(217): error C2664: 'GLuint loadBitmap(char *)': cannot convert argument 1 from 'const char [17]' to 'char *'
-  d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(217): note: Conversion from string literal loses const qualifier (see /Zc:strictStrings)
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(252): warning C4305: '+=': truncation from 'double' to 'T'
+d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(254): warning C4305: '+=': truncation from 'double' to 'T'
           with
           [
               T=float
           ]
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(253): warning C4305: '-=': truncation from 'double' to 'T'
+d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(255): warning C4305: '-=': truncation from 'double' to 'T'
           with
           [
               T=float
           ]
+  AGP Individual Project.vcxproj -> D:\Year 3\Block 1\Advance Computer Graphics\Individual Project\Repo\AGP Individual Project\Debug\AGP Individual Project.exe

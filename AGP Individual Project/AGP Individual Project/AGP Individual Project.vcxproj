@@ -125,6 +125,8 @@
     <ClCompile Include="rt3dObjLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="anorms.h" />
+    <ClInclude Include="cube.h" />
     <ClInclude Include="rt3d.h" />
     <ClInclude Include="rt3dObjLoader.h" />
   </ItemGroup>
