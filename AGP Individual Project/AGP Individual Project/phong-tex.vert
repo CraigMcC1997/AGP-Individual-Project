@@ -7,8 +7,8 @@ uniform mat4 projection;
 uniform vec4 lightPosition;
 //uniform mat3 normalmatrix;
 
-in  vec3 in_Position;
-in  vec3 in_Normal;
+in vec3 in_Position;
+in vec3 in_Normal;
 out vec3 ex_N;
 out vec3 ex_V;
 out vec3 ex_L;
@@ -18,7 +18,8 @@ out vec2 ex_TexCoord;
 
 // multiply each vertex position by the MVP matrix
 // and find V, L, N vectors for the fragment shader
-void main(void) {
+void main(void) 
+{
 
 	// vertex into eye coordinates
 	vec4 vertexPosition = modelview * vec4(in_Position,1.0);

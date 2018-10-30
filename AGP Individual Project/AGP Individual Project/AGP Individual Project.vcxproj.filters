@@ -55,5 +55,11 @@
     <None Include="phong-tex.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="textureBlender.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="textureBlender.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
