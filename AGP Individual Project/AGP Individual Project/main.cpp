@@ -25,6 +25,8 @@ GLuint meshObjects[3];
 GLuint phongShaderProgram;
 GLuint textureBlenderProgram;
 GLuint skyboxProgram;
+GLuint currentShader = NULL;
+GLuint shaderArray[3];
 
 vector<GLfloat> verts;
 vector<GLfloat> norms;
@@ -34,7 +36,7 @@ vector<GLuint> indices;
 GLfloat r = 0.0f;
 
 glm::vec3 movingLightPos(0.0f, 1.0f, 0.0f); //light position
-glm::vec3 eye(0.0f, 1.0f, 0.0f);
+glm::vec3 eye(0.0f, 1.0f, 15.0f);
 glm::vec3 at(0.0f, 1.0f, -1.0f);
 glm::vec3 up(0.0f, 1.0f, 0.0f);
 
@@ -49,13 +51,6 @@ GLuint labels[5];
 float attConstant = 1.0f;
 float attLinear = 0.0f;
 float attQuadratic = 0.0f;
-
-
-
-
-SDL_Surface* gScreenSurface = NULL;
-
-
 
 rt3d::lightStruct light0 = {
 	{0.3f, 0.3f, 0.3f, 1.0f}, // ambient
@@ -119,12 +114,12 @@ SDL_Window * setupRC(SDL_GLContext &context) {
 
 // A simple texture loading function
 // lots of room for improvement - and better error checking!
-GLuint loadBitmap(const char *fname) {
+GLuint loadTexture(const char *fname) {
 	GLuint texID;
 	glGenTextures(1, &texID); // generate texture ID
 
 	// load file - using core SDL library
-	SDL_Surface * tmpSurface = SDL_LoadBMP(fname);
+	SDL_Surface * tmpSurface = IMG_Load(fname);
 
 	if (!tmpSurface) {
 		std::cout << "Error loading bitmap" << std::endl;
@@ -155,34 +150,6 @@ GLuint loadBitmap(const char *fname) {
 
 	SDL_FreeSurface(tmpSurface); // texture loaded, free the temporary buffer
 	return texID;	// return value of texture ID
-}
-
-//method found
-//load any image
-SDL_Surface* loadSurface(const char* path)
-{
-	//The final optimized image
-	SDL_Surface* optimizedSurface = NULL;
-
-	//Load image at specified path
-	SDL_Surface* loadedSurface = IMG_Load(path);
-	if (loadedSurface == NULL)
-	{
-		printf("Unable to load image %s! SDL_image Error: %s\n", path, IMG_GetError());
-	}
-	else
-	{
-		//Convert surface to screen format
-		optimizedSurface = SDL_ConvertSurface(loadedSurface, gScreenSurface->format, NULL);
-		if (optimizedSurface == NULL)
-		{
-			printf("Unable to optimize image %s! SDL Error: %s\n", path, SDL_GetError());
-		}
-
-		//Get rid of old loaded surface
-		SDL_FreeSurface(loadedSurface);
-	}
-	return optimizedSurface;
 }
 
 // A simple cubemap loading function
@@ -228,6 +195,10 @@ GLuint loadCubeMap(const char *fname[6], GLuint *texID)
 }
 
 void init(void) {
+
+	//allows png files to be loaded
+	IMG_Init(IMG_INIT_PNG);
+
 	//phong
 	phongShaderProgram = rt3d::initShaders("phong-tex.vert", "phong-tex.frag");
 	rt3d::setLight(phongShaderProgram, light0);
@@ -259,34 +230,34 @@ void init(void) {
 	meshObjects[0] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
 
 	//bitmaps
-	textures[0] = loadBitmap("../Resources/fabric.bmp");
-	textures[1] = loadBitmap("../Resources/hobgoblin2.bmp");
-	textures[2] = loadBitmap("../Resources/studdedmetal.bmp");
-	textures[3] = loadBitmap("../Resources/textBrick.bmp");
-	textures[4] = loadBitmap("../Resources/textMoss.bmp");
-	textures[5] = loadBitmap("../Resources/textMarble.bmp");
-
-	//allows png files to be loaded
-	IMG_Init(IMG_INIT_PNG);
+	textures[0] = loadTexture("../Resources/fabric.bmp");
+	textures[1] = loadTexture("../Resources/hobgoblin2.bmp");
+	textures[2] = loadTexture("../Resources/studdedmetal.bmp");
+	textures[3] = loadTexture("../Resources/textBrick.bmp");
+	textures[4] = loadTexture("../Resources/textMoss.bmp");
+	textures[5] = loadTexture("../Resources/textMarble.bmp");
 
 	//testing .pngs
-	textures[7] = (GLuint)loadSurface("../Resources/brick.png");
-	textures[8] = (GLuint)loadSurface("../Resources/studdedmetal.png");
+	textures[7] = loadTexture("../Resources/test2.png");
+	textures[8] = loadTexture("../Resources/red2.png");
 
+	shaderArray[0] = phongShaderProgram;
+	shaderArray[1] = textureBlenderProgram;
+
+	currentShader = shaderArray[0];
 
 	//base texture
 	glUseProgram(textureBlenderProgram);
 	GLint tex1_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex1");
 	glUniform1i(tex1_uniform_loc, 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	glBindTexture(GL_TEXTURE_2D, textures[7]);
 
 	//texture for blending
 	GLint tex2_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex2");
 	glUniform1i(tex2_uniform_loc, 1);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, textures[3]);
-
+	glBindTexture(GL_TEXTURE_2D, textures[8]);
 
 	//loading the stanford bunny
 	verts.clear(); norms.clear(); tex_coords.clear(); indices.clear();
@@ -327,6 +298,14 @@ void update(void) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glEnable(GL_CULL_FACE);
 	}
+
+	if (keys[SDL_SCANCODE_3]) {
+		currentShader = shaderArray[0];
+	}
+
+	if (keys[SDL_SCANCODE_4]) {
+		currentShader = shaderArray[1];
+	}
 }
 
 void draw(SDL_Window * window) {
@@ -366,8 +345,6 @@ void draw(SDL_Window * window) {
 	// back to remainder of rendering
 	glDepthMask(GL_TRUE); // make sure depth test is on
 
-	glUseProgram(phongShaderProgram);
-
 	glm::vec4 tmp = mvStack.top()*glm::vec4(movingLightPos, 1.0);
 	light0.position[0] = tmp.x;
 	light0.position[1] = tmp.y;
@@ -376,15 +353,17 @@ void draw(SDL_Window * window) {
 	rt3d::setLightPos(phongShaderProgram, glm::value_ptr(tmp));
 	rt3d::setUniformMatrix4fv(phongShaderProgram, "projection", glm::value_ptr(projection));
 
+	glUseProgram(phongShaderProgram);
 
 	//draw a cube for texture blending
 	mvStack.push(mvStack.top());
 	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(0.0f, 1.0f, -9.0f));
-	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(2.0f, 2.0f, 2.0f));
-	rt3d::setUniformMatrix4fv(textureBlenderProgram, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::setMaterial(textureBlenderProgram, material1);
+	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(scale*scale, scale*scale, scale*scale));
+	rt3d::setUniformMatrix4fv(currentShader, "modelview", glm::value_ptr(mvStack.top()));
+	rt3d::setMaterial(currentShader, material1);
 	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
 	mvStack.pop();
+
 
 	//draw a cube for ground plane
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -392,10 +371,9 @@ void draw(SDL_Window * window) {
 	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(-10.0f, -0.1f, -10.0f));
 	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(20.0f, 0.1f, 20.0f));
 	rt3d::setUniformMatrix4fv(phongShaderProgram, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::setMaterial(phongShaderProgram, material0);
+	rt3d::setMaterial(phongShaderProgram, material1);
 	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
 	mvStack.pop();
-
 
 	// draw the toon shaded bunny
 	glBindTexture(GL_TEXTURE_2D, 2);

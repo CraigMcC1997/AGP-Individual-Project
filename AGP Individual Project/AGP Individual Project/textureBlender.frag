@@ -10,5 +10,5 @@ uniform sampler2D tex2;
 
 void main(void)
 {
-	color = 0.5 * texture(tex1, tex_coord0) + 0.5 * texture(tex2, tex_coord1);
+	color = texture(tex1, tex_coord0) + texture(tex2, tex_coord1);
 }
