@@ -209,6 +209,7 @@ void init(void) {
 	//rt3d::setMaterial(textureBlenderProgram, material0);
 
 	// set light attenuation shader uniforms
+	glUseProgram(phongShaderProgram);
 	GLuint uniformIndex = glGetUniformLocation(phongShaderProgram, "attConst");
 	glUniform1f(uniformIndex, attConstant);
 	uniformIndex = glGetUniformLocation(phongShaderProgram, "attLinear");
@@ -230,16 +231,17 @@ void init(void) {
 	meshObjects[0] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
 
 	//bitmaps
-	textures[0] = loadTexture("../Resources/fabric.bmp");
+	textures[0] = loadTexture("../Resources/fabric.bmp");/*
 	textures[1] = loadTexture("../Resources/hobgoblin2.bmp");
 	textures[2] = loadTexture("../Resources/studdedmetal.bmp");
 	textures[3] = loadTexture("../Resources/textBrick.bmp");
 	textures[4] = loadTexture("../Resources/textMoss.bmp");
 	textures[5] = loadTexture("../Resources/textMarble.bmp");
+	*/
 
 	//testing .pngs
-	textures[7] = loadTexture("../Resources/test2.png");
-	textures[8] = loadTexture("../Resources/red2.png");
+	textures[7] = loadTexture("../Resources/red2.png");
+	textures[8] = loadTexture("../Resources/test1.png");
 
 	shaderArray[0] = phongShaderProgram;
 	shaderArray[1] = textureBlenderProgram;
@@ -249,14 +251,16 @@ void init(void) {
 	//base texture
 	glUseProgram(textureBlenderProgram);
 	GLint tex1_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex1");
-	glUniform1i(tex1_uniform_loc, 0);
-	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(tex1_uniform_loc, 1);
+	glActiveTexture(GL_TEXTURE1);
+	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, textures[7]);
 
 	//texture for blending
 	GLint tex2_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex2");
-	glUniform1i(tex2_uniform_loc, 1);
-	glActiveTexture(GL_TEXTURE1);
+	glUniform1i(tex2_uniform_loc, 2);
+	glActiveTexture(GL_TEXTURE2);
+	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, textures[8]);
 
 	//loading the stanford bunny
@@ -355,17 +359,37 @@ void draw(SDL_Window * window) {
 
 	glUseProgram(phongShaderProgram);
 
+
 	//draw a cube for texture blending
+	//base texture
+	glUseProgram(textureBlenderProgram);
+	rt3d::setUniformMatrix4fv(textureBlenderProgram, "projection", glm::value_ptr(projection));
+
+	glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_TEXTURE_2D);
+	GLint tex1_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex1");
+	glUniform1i(tex1_uniform_loc, 0);
+	
+	glBindTexture(GL_TEXTURE_2D, textures[7]);
+
+	//texture for blending
+	glActiveTexture(GL_TEXTURE2);
+	glEnable(GL_TEXTURE_2D);
+	GLint tex2_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex2");
+	glUniform1i(tex2_uniform_loc, 2);
+	glBindTexture(GL_TEXTURE_2D, textures[8]);
+
 	mvStack.push(mvStack.top());
 	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(0.0f, 1.0f, -9.0f));
 	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(scale*scale, scale*scale, scale*scale));
-	rt3d::setUniformMatrix4fv(currentShader, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::setMaterial(currentShader, material1);
+	rt3d::setUniformMatrix4fv(textureBlenderProgram, "modelview", glm::value_ptr(mvStack.top()));
+	rt3d::setMaterial(textureBlenderProgram, material1);
 	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
 	mvStack.pop();
 
-
+	glUseProgram(phongShaderProgram);
 	//draw a cube for ground plane
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	mvStack.push(mvStack.top());
 	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(-10.0f, -0.1f, -10.0f));

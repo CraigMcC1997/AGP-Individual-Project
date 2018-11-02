@@ -10,5 +10,6 @@ uniform sampler2D tex2;
 
 void main(void)
 {
-	color = texture(tex1, tex_coord0) + texture(tex2, tex_coord1);
+	color = (texture(tex1, tex_coord0) + texture(tex2, tex_coord1))/2.0;
+	color.a = 1.0;
 }
