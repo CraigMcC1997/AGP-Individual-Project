@@ -11,6 +11,7 @@
 #include <stack>
 #include <iostream>
 #include <SDL_image.h>
+#include <vector>
 
 using namespace std;
 
@@ -26,6 +27,7 @@ GLuint textureBlenderProgram;
 //GLuint skyboxProgram;
 GLuint currentShader = NULL;
 GLuint shaderArray[3];
+GLuint currentEffectTexture = NULL;
 
 vector<GLfloat> verts;
 vector<GLfloat> norms;
@@ -161,14 +163,19 @@ void init(void) {
 	meshIndexCount = size;
 	meshObjects[0] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
 
-	//testing .pngs
-	textures[1] = loadTexture("../Resources/red2.png");
-	textures[2] = loadTexture("../Resources/test1.png");
+	//loading textures
+	textures[4] = loadTexture("../Resources/splatter.png");
+	textures[3] = loadTexture("../Resources/brick.png");
+	textures[2] = loadTexture("../Resources/red2.png");
+	textures[1] = loadTexture("../Resources/moss.png");
+	textures[0] = loadTexture("../Resources/Cobblestone.png");
+
 
 	shaderArray[0] = phongShaderProgram;
 	shaderArray[1] = textureBlenderProgram;
 
 	currentShader = shaderArray[1];
+	currentEffectTexture = textures[1];
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -196,10 +203,24 @@ void update(void) {
 	if (keys[SDL_SCANCODE_PERIOD]) r += 1.0f;
 
 	if (keys[SDL_SCANCODE_1]) {
+		//phong
 		currentShader = shaderArray[0];
 	}
 	if (keys[SDL_SCANCODE_2]) {
+		//texture blender
 		currentShader = shaderArray[1];
+	}
+	if (keys[SDL_SCANCODE_3]) {
+		//moss
+		currentEffectTexture = textures[2];
+	}
+	if (keys[SDL_SCANCODE_4]) {
+		//red circle
+		currentEffectTexture = shaderArray[3];
+	}
+	if (keys[SDL_SCANCODE_5]) {
+		//blood splatter
+		currentEffectTexture = shaderArray[4];
 	}
 }
 
@@ -235,7 +256,7 @@ void draw(SDL_Window * window) {
 	// JR tex1 is red2.png - keep the glActivateTexture, glUniform1i(tex1_uniform_loc... number consistent, i.e. 1
 	glActiveTexture(GL_TEXTURE1); // < - 1
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, textures[1]); 
+	glBindTexture(GL_TEXTURE_2D, currentEffectTexture); 
 	GLint tex1_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex1");
 	glUniform1i(tex1_uniform_loc, 1); // < -- 1 - note: if you swap the numbers 1 and 2 here and the corresponding line below (labeled HERE) it will swap the textures
 
@@ -243,7 +264,7 @@ void draw(SDL_Window * window) {
 	//texture for blending
 	glActiveTexture(GL_TEXTURE2); // <-- 2
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, textures[2]); // <-- don't forget to bind
+	glBindTexture(GL_TEXTURE_2D, textures[0]); // <-- don't forget to bind
 	GLint tex2_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex2");
 	glUniform1i(tex2_uniform_loc, 2); // < -- 2 (HERE)
 
