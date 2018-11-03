@@ -43,7 +43,7 @@ glm::vec3 up(0.0f, 1.0f, 0.0f);
 stack<glm::mat4> mvStack;
 
 // TEXTURE STUFF
-GLuint textures[10];
+GLuint textures[3];
 GLuint skybox[5];
 GLuint labels[5];
 
@@ -231,37 +231,16 @@ void init(void) {
 	meshObjects[0] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
 
 	//bitmaps
-	textures[0] = loadTexture("../Resources/fabric.bmp");/*
-	textures[1] = loadTexture("../Resources/hobgoblin2.bmp");
-	textures[2] = loadTexture("../Resources/studdedmetal.bmp");
-	textures[3] = loadTexture("../Resources/textBrick.bmp");
-	textures[4] = loadTexture("../Resources/textMoss.bmp");
-	textures[5] = loadTexture("../Resources/textMarble.bmp");
-	*/
+	textures[0] = loadTexture("../Resources/fabric.bmp");
 
 	//testing .pngs
-	textures[7] = loadTexture("../Resources/red2.png");
-	textures[8] = loadTexture("../Resources/test1.png");
+	textures[1] = loadTexture("../Resources/red2.png");
+	textures[2] = loadTexture("../Resources/test1.png");
 
 	shaderArray[0] = phongShaderProgram;
 	shaderArray[1] = textureBlenderProgram;
 
 	currentShader = shaderArray[0];
-
-	//base texture
-	glUseProgram(textureBlenderProgram);
-	GLint tex1_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex1");
-	glUniform1i(tex1_uniform_loc, 1);
-	glActiveTexture(GL_TEXTURE1);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, textures[7]);
-
-	//texture for blending
-	GLint tex2_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex2");
-	glUniform1i(tex2_uniform_loc, 2);
-	glActiveTexture(GL_TEXTURE2);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, textures[8]);
 
 	//loading the stanford bunny
 	verts.clear(); norms.clear(); tex_coords.clear(); indices.clear();
@@ -363,21 +342,23 @@ void draw(SDL_Window * window) {
 	//draw a cube for texture blending
 	//base texture
 	glUseProgram(textureBlenderProgram);
+	// JR you will need to pass in another uniform float for time (into vertex shader)
 	rt3d::setUniformMatrix4fv(textureBlenderProgram, "projection", glm::value_ptr(projection));
 
-	glActiveTexture(GL_TEXTURE0);
+	// JR tex1 is red2.png - keep the glActivateTexture, glUniform1i(tex1_uniform_loc... number consistent, i.e. 1
+	glActiveTexture(GL_TEXTURE1); // < - 1
 	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, textures[1]); 
 	GLint tex1_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex1");
-	glUniform1i(tex1_uniform_loc, 0);
-	
-	glBindTexture(GL_TEXTURE_2D, textures[7]);
+	glUniform1i(tex1_uniform_loc, 1); // < -- 1 - note: if you swap the numbers 1 and 2 here and the corresponding line below (labeled HERE) it will swap the textures
 
+	// JR tex2 is test1.png - keep the glActivateTexture, glUniform1i(tex1_uniform_loc... number consistent, i.e. 2
 	//texture for blending
-	glActiveTexture(GL_TEXTURE2);
+	glActiveTexture(GL_TEXTURE2); // <-- 2
 	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, textures[2]); // <-- don't forget to bind
 	GLint tex2_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex2");
-	glUniform1i(tex2_uniform_loc, 2);
-	glBindTexture(GL_TEXTURE_2D, textures[8]);
+	glUniform1i(tex2_uniform_loc, 2); // < -- 2 (HERE)
 
 	mvStack.push(mvStack.top());
 	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(0.0f, 1.0f, -9.0f));
@@ -391,6 +372,8 @@ void draw(SDL_Window * window) {
 	//draw a cube for ground plane
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	GLint ground_uniform_loc = glGetUniformLocation(phongShaderProgram, "textureUnit0");
+	glUniform1i(ground_uniform_loc, 0);
 	mvStack.push(mvStack.top());
 	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(-10.0f, -0.1f, -10.0f));
 	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(20.0f, 0.1f, 20.0f));
