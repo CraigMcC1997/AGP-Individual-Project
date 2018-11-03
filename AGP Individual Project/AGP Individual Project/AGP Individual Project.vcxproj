@@ -125,14 +125,10 @@
     <ClCompile Include="rt3dObjLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="anorms.h" />
-    <ClInclude Include="cube.h" />
     <ClInclude Include="rt3d.h" />
     <ClInclude Include="rt3dObjLoader.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cubeMap.frag" />
-    <None Include="cubeMap.vert" />
     <None Include="phong-tex.frag" />
     <None Include="phong-tex.vert" />
     <None Include="textureBlender.frag" />

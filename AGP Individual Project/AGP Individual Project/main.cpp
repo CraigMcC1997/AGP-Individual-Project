@@ -19,12 +19,11 @@ using namespace std;
 // Globals
 // Real programs don't use globals :-D
 GLuint meshIndexCount;
-GLuint bunnyIndexCount;
 GLuint meshObjects[3];
 
 GLuint phongShaderProgram;
 GLuint textureBlenderProgram;
-GLuint skyboxProgram;
+//GLuint skyboxProgram;
 GLuint currentShader = NULL;
 GLuint shaderArray[3];
 
@@ -35,7 +34,6 @@ vector<GLuint> indices;
 
 GLfloat r = 0.0f;
 
-glm::vec3 movingLightPos(0.0f, 1.0f, 0.0f); //light position
 glm::vec3 eye(0.0f, 1.0f, 15.0f);
 glm::vec3 at(0.0f, 1.0f, -1.0f);
 glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -44,7 +42,6 @@ stack<glm::mat4> mvStack;
 
 // TEXTURE STUFF
 GLuint textures[3];
-GLuint skybox[5];
 GLuint labels[5];
 
 // light attenuation
@@ -60,29 +57,12 @@ rt3d::lightStruct light0 = {
 };
 glm::vec4 lightPos(-10.0f, 10.0f, 10.0f, 1.0f); //light position
 
-//lab2 moving light
-rt3d::lightStruct movingLight = {
-	{ 0.3f, 0.3f, 0.3f, 1.0f }, // ambient
-	{ 1.0f, 1.0f, 1.0f, 1.0f }, // diffuse
-	{ 1.0f, 1.0f, 1.0f, 1.0f }, // specular
-	{ eye.x, eye.y, eye.z, 1.0f }  // position
-};
-
-rt3d::materialStruct material0 = {
-	{0.2f, 0.4f, 0.2f, 1.0f}, // ambient
-	{0.5f, 1.0f, 0.5f, 1.0f}, // diffuse
-	{0.0f, 0.1f, 0.0f, 1.0f}, // specular
-	2.0f  // shininess
-};
 rt3d::materialStruct material1 = {
 	{0.4f, 0.4f, 1.0f, 1.0f}, // ambient
 	{0.8f, 0.8f, 1.0f, 1.0f}, // diffuse
 	{0.8f, 0.8f, 0.8f, 1.0f}, // specular
 	1.0f  // shininess
 };
-
-//for rotating the cube
-float theta = 0.0f;
 
 // Set up rendering context
 SDL_Window * setupRC(SDL_GLContext &context) {
@@ -152,48 +132,6 @@ GLuint loadTexture(const char *fname) {
 	return texID;	// return value of texture ID
 }
 
-// A simple cubemap loading function
-GLuint loadCubeMap(const char *fname[6], GLuint *texID)
-{
-	glGenTextures(1, texID); // generate texture ID
-	GLenum sides[6] = { GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y };
-	SDL_Surface *tmpSurface;
-
-	glBindTexture(GL_TEXTURE_CUBE_MAP, *texID); // bind texture and set parameters
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	GLuint externalFormat;
-	for (int i = 0; i < 6; i++)
-	{
-		// load file - using core SDL library
-		tmpSurface = SDL_LoadBMP(fname[i]);
-		if (!tmpSurface)
-		{
-			std::cout << "Error loading bitmap" << std::endl;
-			return *texID;
-		}
-
-		// skybox textures should not have alpha (assuming this is true!)
-		SDL_PixelFormat *format = tmpSurface->format;
-		externalFormat = (format->Rmask < format->Bmask) ? GL_RGB : GL_BGR;
-
-		glTexImage2D(sides[i], 0, GL_RGB, tmpSurface->w, tmpSurface->h, 0,
-			externalFormat, GL_UNSIGNED_BYTE, tmpSurface->pixels);
-		// texture loaded, free the temporary buffer
-		SDL_FreeSurface(tmpSurface);
-	}
-	return *texID;	// return value of texure ID, redundant really
-}
-
 void init(void) {
 
 	//allows png files to be loaded
@@ -202,7 +140,7 @@ void init(void) {
 	//phong
 	phongShaderProgram = rt3d::initShaders("phong-tex.vert", "phong-tex.frag");
 	rt3d::setLight(phongShaderProgram, light0);
-	rt3d::setMaterial(phongShaderProgram, material0);
+	rt3d::setMaterial(phongShaderProgram, material1);
 
 	textureBlenderProgram = rt3d::initShaders("textureBlender.vert", "textureBlender.frag");
 	//rt3d::setLight(textureBlenderProgram, light0);
@@ -217,21 +155,11 @@ void init(void) {
 	uniformIndex = glGetUniformLocation(phongShaderProgram, "attQuadratic");
 	glUniform1f(uniformIndex, attQuadratic);
 
-	skyboxProgram = rt3d::initShaders("cubeMap.vert", "cubeMap.frag");
-
-	const char *cubeTexFiles[6] = {
-		"town-skybox/Town_ft.bmp", "town-skybox/Town_bk.bmp",  "town-skybox/Town_lf.bmp", "town-skybox/Town_rt.bmp", "town-skybox/Town2_up.bmp", "town-skybox/Town_dn.bmp"
-	};
-	loadCubeMap(cubeTexFiles, &skybox[0]);
-
 	//skybox cube object
 	rt3d::loadObj("../Resources/cube.obj", verts, norms, tex_coords, indices);
 	GLuint size = indices.size();
 	meshIndexCount = size;
 	meshObjects[0] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
-
-	//bitmaps
-	textures[0] = loadTexture("../Resources/fabric.bmp");
 
 	//testing .pngs
 	textures[1] = loadTexture("../Resources/red2.png");
@@ -240,13 +168,7 @@ void init(void) {
 	shaderArray[0] = phongShaderProgram;
 	shaderArray[1] = textureBlenderProgram;
 
-	currentShader = shaderArray[0];
-
-	//loading the stanford bunny
-	verts.clear(); norms.clear(); tex_coords.clear(); indices.clear();
-	rt3d::loadObj("../Resources/bunny-5000.obj", verts, norms, tex_coords, indices);
-	bunnyIndexCount = indices.size();
-	meshObjects[2] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), nullptr, bunnyIndexCount, indices.data());
+	currentShader = shaderArray[1];
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -274,19 +196,9 @@ void update(void) {
 	if (keys[SDL_SCANCODE_PERIOD]) r += 1.0f;
 
 	if (keys[SDL_SCANCODE_1]) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDisable(GL_CULL_FACE);
-	}
-	if (keys[SDL_SCANCODE_2]) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glEnable(GL_CULL_FACE);
-	}
-
-	if (keys[SDL_SCANCODE_3]) {
 		currentShader = shaderArray[0];
 	}
-
-	if (keys[SDL_SCANCODE_4]) {
+	if (keys[SDL_SCANCODE_2]) {
 		currentShader = shaderArray[1];
 	}
 }
@@ -294,7 +206,7 @@ void update(void) {
 void draw(SDL_Window * window) {
 	// clear the screen
 	glEnable(GL_CULL_FACE);
-	glClearColor(0.9f, 0.5f, 0.5f, 1.0f);
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 projection(1.0);
@@ -310,38 +222,13 @@ void draw(SDL_Window * window) {
 	at = moveForward(eye, r, 1.0f);
 	mvStack.top() = glm::lookAt(eye, at, up);
 
-	// draw a skybox
-	glUseProgram(skyboxProgram);
-	rt3d::setUniformMatrix4fv(skyboxProgram, "projection", glm::value_ptr(projection));
-	glDepthMask(GL_FALSE); // make sure depth test is off
-	glm::mat3 mvRotOnlyMat3 = glm::mat3(mvStack.top());
-	mvStack.push(glm::mat4(mvRotOnlyMat3));
-
-	glCullFace(GL_FRONT); // drawing inside of cube!
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skybox[0]);
-	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(1.5f, 1.5f, 1.5f));
-	rt3d::setUniformMatrix4fv(skyboxProgram, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
-	mvStack.pop();
-	glCullFace(GL_BACK); // drawing inside of cube!
-
 	// back to remainder of rendering
 	glDepthMask(GL_TRUE); // make sure depth test is on
-
-	glm::vec4 tmp = mvStack.top()*glm::vec4(movingLightPos, 1.0);
-	light0.position[0] = tmp.x;
-	light0.position[1] = tmp.y;
-	light0.position[2] = tmp.z;
-	std::cout << tmp.x << ", " << tmp.y << ", " << tmp.z << std::endl;
-	rt3d::setLightPos(phongShaderProgram, glm::value_ptr(tmp));
 	rt3d::setUniformMatrix4fv(phongShaderProgram, "projection", glm::value_ptr(projection));
-
-	glUseProgram(phongShaderProgram);
-
 
 	//draw a cube for texture blending
 	//base texture
-	glUseProgram(textureBlenderProgram);
+	glUseProgram(currentShader);
 	// JR you will need to pass in another uniform float for time (into vertex shader)
 	rt3d::setUniformMatrix4fv(textureBlenderProgram, "projection", glm::value_ptr(projection));
 
@@ -361,44 +248,17 @@ void draw(SDL_Window * window) {
 	glUniform1i(tex2_uniform_loc, 2); // < -- 2 (HERE)
 
 	mvStack.push(mvStack.top());
-	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(0.0f, 1.0f, -9.0f));
-	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(scale*scale, scale*scale, scale*scale));
-	rt3d::setUniformMatrix4fv(textureBlenderProgram, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::setMaterial(textureBlenderProgram, material1);
+	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(0.0f, 1.0f, 6.0f));
+	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(scale*2, scale*2, scale*2));
+	mvStack.top() = glm::rotate(mvStack.top(), glm::radians(45.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+	rt3d::setUniformMatrix4fv(currentShader, "modelview", glm::value_ptr(mvStack.top()));
+	rt3d::setMaterial(currentShader, material1);
 	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
-	mvStack.pop();
-
-	glUseProgram(phongShaderProgram);
-	//draw a cube for ground plane
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	GLint ground_uniform_loc = glGetUniformLocation(phongShaderProgram, "textureUnit0");
-	glUniform1i(ground_uniform_loc, 0);
-	mvStack.push(mvStack.top());
-	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(-10.0f, -0.1f, -10.0f));
-	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(20.0f, 0.1f, 20.0f));
-	rt3d::setUniformMatrix4fv(phongShaderProgram, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::setMaterial(phongShaderProgram, material1);
-	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
-	mvStack.pop();
-
-	// draw the toon shaded bunny
-	glBindTexture(GL_TEXTURE_2D, 2);
-	glUseProgram(phongShaderProgram);
-	rt3d::setLightPos(phongShaderProgram, glm::value_ptr(tmp));
-	rt3d::setUniformMatrix4fv(phongShaderProgram, "projection", glm::value_ptr(projection));
-	mvStack.push(mvStack.top());
-	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(0.0f, 0.0f, -5.0f));
-	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(scale*10.0f, scale*10.0f, scale*10.0f));
-	rt3d::setUniformMatrix4fv(phongShaderProgram, "modelview", glm::value_ptr(mvStack.top()));
-	rt3d::setMaterial(phongShaderProgram, material0);
-	rt3d::drawIndexedMesh(meshObjects[2], bunnyIndexCount, GL_TRIANGLES);
 	mvStack.pop();
 
 	// remember to use at least one pop operation per push...
 	mvStack.pop(); // initial matrix
-	glDepthMask(GL_TRUE);
-
+	glDepthMask(GL_TRUE);	//enable depth mask
 	SDL_GL_SwapWindow(window); // swap buffers
 }
 

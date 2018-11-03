@@ -1,19 +1,12 @@
 ﻿  main.cpp
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(270): warning C4305: '+=': truncation from 'double' to 'T'
+d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(192): warning C4305: '+=': truncation from 'double' to 'T'
           with
           [
               T=float
           ]
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(271): warning C4305: '-=': truncation from 'double' to 'T'
+d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(193): warning C4305: '-=': truncation from 'double' to 'T'
           with
           [
               T=float
           ]
-  rt3d.cpp
-  rt3dObjLoader.cpp
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\rt3dobjloader.cpp(196): warning C4018: '<': signed/unsigned mismatch
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\rt3dobjloader.cpp(134): warning C4101: 'z': unreferenced local variable
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\rt3dobjloader.cpp(134): warning C4101: 'y': unreferenced local variable
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\rt3dobjloader.cpp(134): warning C4101: 'x': unreferenced local variable
-  Generating Code...
   AGP Individual Project.vcxproj -> D:\Year 3\Block 1\Advance Computer Graphics\Individual Project\Repo\AGP Individual Project\Debug\AGP Individual Project.exe

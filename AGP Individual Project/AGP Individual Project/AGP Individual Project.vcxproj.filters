@@ -21,10 +21,10 @@
     <ClCompile Include="rt3d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rt3dObjLoader.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="rt3dObjLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,20 +35,8 @@
     <ClInclude Include="rt3dObjLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="anorms.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cube.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="cubeMap.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="cubeMap.vert">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="phong-tex.frag">
       <Filter>Resource Files</Filter>
     </None>
