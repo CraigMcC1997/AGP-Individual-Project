@@ -210,17 +210,22 @@ void update(void) {
 		//texture blender
 		currentShader = shaderArray[1];
 	}
+
 	if (keys[SDL_SCANCODE_3]) {
 		//moss
-		currentEffectTexture = textures[2];
+		currentEffectTexture = textures[1];
 	}
 	if (keys[SDL_SCANCODE_4]) {
 		//red circle
-		currentEffectTexture = shaderArray[3];
+		currentEffectTexture = textures[2];
 	}
 	if (keys[SDL_SCANCODE_5]) {
+		//brick
+		currentEffectTexture = textures[3];
+	}
+	if (keys[SDL_SCANCODE_6]) {
 		//blood splatter
-		currentEffectTexture = shaderArray[4];
+		currentEffectTexture = textures[4];
 	}
 }
 
