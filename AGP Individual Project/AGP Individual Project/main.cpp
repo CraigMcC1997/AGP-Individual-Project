@@ -15,18 +15,15 @@
 
 using namespace std;
 
-#define DEG_TO_RADIAN 0.017453293
-
 // Globals
 // Real programs don't use globals :-D
 GLuint meshIndexCount;
-GLuint meshObjects[3];
+GLuint meshObject;
 
 GLuint phongShaderProgram;
 GLuint textureBlenderProgram;
-//GLuint skyboxProgram;
 GLuint currentShader = NULL;
-GLuint shaderArray[3];
+GLuint shaderArray[2];
 GLuint currentEffectTexture = NULL;
 
 vector<GLfloat> verts;
@@ -45,11 +42,6 @@ stack<glm::mat4> mvStack;
 // TEXTURE STUFF
 GLuint textures[3];
 GLuint labels[5];
-
-// light attenuation
-float attConstant = 1.0f;
-float attLinear = 0.0f;
-float attQuadratic = 0.0f;
 
 rt3d::lightStruct light0 = {
 	{0.3f, 0.3f, 0.3f, 1.0f}, // ambient
@@ -95,16 +87,15 @@ SDL_Window * setupRC(SDL_GLContext &context) {
 }
 
 // A simple texture loading function
-// lots of room for improvement - and better error checking!
 GLuint loadTexture(const char *fname) {
 	GLuint texID;
 	glGenTextures(1, &texID); // generate texture ID
 
-	// load file - using core SDL library
+	// load file - using extended SDL_image library
 	SDL_Surface * tmpSurface = IMG_Load(fname);
 
 	if (!tmpSurface) {
-		std::cout << "Error loading bitmap" << std::endl;
+		std::cout << "Error loading texture" << std::endl;
 	}
 
 	// bind texture and set parameters
@@ -144,24 +135,14 @@ void init(void) {
 	rt3d::setLight(phongShaderProgram, light0);
 	rt3d::setMaterial(phongShaderProgram, material1);
 
+	//initialising texture blender shader
 	textureBlenderProgram = rt3d::initShaders("textureBlender.vert", "textureBlender.frag");
-	//rt3d::setLight(textureBlenderProgram, light0);
-	//rt3d::setMaterial(textureBlenderProgram, material0);
-
-	// set light attenuation shader uniforms
-	glUseProgram(phongShaderProgram);
-	GLuint uniformIndex = glGetUniformLocation(phongShaderProgram, "attConst");
-	glUniform1f(uniformIndex, attConstant);
-	uniformIndex = glGetUniformLocation(phongShaderProgram, "attLinear");
-	glUniform1f(uniformIndex, attLinear);
-	uniformIndex = glGetUniformLocation(phongShaderProgram, "attQuadratic");
-	glUniform1f(uniformIndex, attQuadratic);
 
 	//skybox cube object
 	rt3d::loadObj("../Resources/cube.obj", verts, norms, tex_coords, indices);
 	GLuint size = indices.size();
 	meshIndexCount = size;
-	meshObjects[0] = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
+	meshObject = rt3d::createMesh(verts.size() / 3, verts.data(), nullptr, norms.data(), tex_coords.data(), size, indices.data());
 
 	//loading textures
 	textures[4] = loadTexture("../Resources/splatter.png");
@@ -170,10 +151,11 @@ void init(void) {
 	textures[1] = loadTexture("../Resources/moss.png");
 	textures[0] = loadTexture("../Resources/Cobblestone.png");
 
-
+	//filling shader array
 	shaderArray[0] = phongShaderProgram;
 	shaderArray[1] = textureBlenderProgram;
 
+	//starting shader is texture blender
 	currentShader = shaderArray[1];
 	currentEffectTexture = textures[1];
 
@@ -183,11 +165,11 @@ void init(void) {
 }
 
 glm::vec3 moveForward(glm::vec3 pos, GLfloat angle, GLfloat d) {
-	return glm::vec3(pos.x + d * std::sin(r*DEG_TO_RADIAN), pos.y, pos.z - d * std::cos(r*DEG_TO_RADIAN));
+	return glm::vec3(pos.x + d * std::sin(glm::radians(r)), pos.y, pos.z - d * std::cos(glm::radians(r)));
 }
 
 glm::vec3 moveRight(glm::vec3 pos, GLfloat angle, GLfloat d) {
-	return glm::vec3(pos.x + d * std::cos(r*DEG_TO_RADIAN), pos.y, pos.z + d * std::sin(r*DEG_TO_RADIAN));
+	return glm::vec3(pos.x + d * std::cos(glm::radians(r)), pos.y, pos.z + d * std::sin(glm::radians(r)));
 }
 
 void update(void) {
@@ -236,7 +218,7 @@ void draw(SDL_Window * window) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 projection(1.0);
-	projection = glm::perspective(float(60.0f*DEG_TO_RADIAN), 800.0f / 600.0f, 1.0f, 150.0f);
+	projection = glm::perspective(float(glm::radians(60.0f)), 800.0f / 600.0f, 1.0f, 150.0f);
 	rt3d::setUniformMatrix4fv(phongShaderProgram, "projection", glm::value_ptr(projection));
 
 	GLfloat scale(1.0f); // just to allow easy scaling of complete scene
@@ -255,17 +237,15 @@ void draw(SDL_Window * window) {
 	//draw a cube for texture blending
 	//base texture
 	glUseProgram(currentShader);
-	// JR you will need to pass in another uniform float for time (into vertex shader)
 	rt3d::setUniformMatrix4fv(textureBlenderProgram, "projection", glm::value_ptr(projection));
 
-	// JR tex1 is red2.png - keep the glActivateTexture, glUniform1i(tex1_uniform_loc... number consistent, i.e. 1
+	//enabling & binding textures which are passed to shader for blending
 	glActiveTexture(GL_TEXTURE1); // < - 1
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, currentEffectTexture); 
 	GLint tex1_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex1");
 	glUniform1i(tex1_uniform_loc, 1); // < -- 1 - note: if you swap the numbers 1 and 2 here and the corresponding line below (labeled HERE) it will swap the textures
 
-	// JR tex2 is test1.png - keep the glActivateTexture, glUniform1i(tex1_uniform_loc... number consistent, i.e. 2
 	//texture for blending
 	glActiveTexture(GL_TEXTURE2); // <-- 2
 	glEnable(GL_TEXTURE_2D);
@@ -273,13 +253,14 @@ void draw(SDL_Window * window) {
 	GLint tex2_uniform_loc = glGetUniformLocation(textureBlenderProgram, "tex2");
 	glUniform1i(tex2_uniform_loc, 2); // < -- 2 (HERE)
 
+	//drawing a basic box for proof of concept.
 	mvStack.push(mvStack.top());
 	mvStack.top() = glm::translate(mvStack.top(), glm::vec3(0.0f, 1.0f, 6.0f));
 	mvStack.top() = glm::scale(mvStack.top(), glm::vec3(scale*2, scale*2, scale*2));
 	mvStack.top() = glm::rotate(mvStack.top(), glm::radians(45.0f), glm::vec3(1.0f, 1.0f, 0.0f));
 	rt3d::setUniformMatrix4fv(currentShader, "modelview", glm::value_ptr(mvStack.top()));
 	rt3d::setMaterial(currentShader, material1);
-	rt3d::drawIndexedMesh(meshObjects[0], meshIndexCount, GL_TRIANGLES);
+	rt3d::drawIndexedMesh(meshObject, meshIndexCount, GL_TRIANGLES);
 	mvStack.pop();
 
 	// remember to use at least one pop operation per push...

@@ -1,10 +1,10 @@
 ﻿  main.cpp
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(199): warning C4305: '+=': truncation from 'double' to 'T'
+d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(181): warning C4305: '+=': truncation from 'double' to 'T'
           with
           [
               T=float
           ]
-d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(200): warning C4305: '-=': truncation from 'double' to 'T'
+d:\year 3\block 1\advance computer graphics\individual project\repo\agp individual project\agp individual project\main.cpp(182): warning C4305: '-=': truncation from 'double' to 'T'
           with
           [
               T=float

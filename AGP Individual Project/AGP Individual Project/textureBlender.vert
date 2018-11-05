@@ -15,7 +15,7 @@ uniform float time;
 void main(void)
 {
 	 mat2 m = mat2(vec2(cos(time), sin(time)),
-				    vec2(-sin(time), cos(time))); // JR your time value needs to be passed in form the cpp code to have effect here
+				    vec2(-sin(time), cos(time)));
 
 	tex_coord0 = in_TexCoord * m;
 	tex_coord1 = in_TexCoord * transpose(m);
